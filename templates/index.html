@@ -2,44 +2,73 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1e1e1e">
     <title>MetaTrader WebTerminal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <!-- Top menu bar -->
-    <div class="mt-toolbar">
+<body class="mt-app">
+
+    <!-- ========== DESKTOP TOOLBAR ========== -->
+    <header class="mt-toolbar desktop-only">
         <div class="mt-menu">
             <button class="mt-menu-btn" id="btn-refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
             <button class="mt-menu-btn" id="btn-retrain"><i class="fas fa-brain"></i> Retrain</button>
             <button class="mt-menu-btn" id="btn-settings"><i class="fas fa-cog"></i> Settings</button>
             <span class="mt-sep"></span>
-            <button class="mt-tf-btn" data-tf="M1">M1</button>
-            <button class="mt-tf-btn" data-tf="M5">M5</button>
-            <button class="mt-tf-btn" data-tf="M15">M15</button>
-            <button class="mt-tf-btn" data-tf="M30">M30</button>
-            <button class="mt-tf-btn active" data-tf="H1">H1</button>
-            <button class="mt-tf-btn" data-tf="H4">H4</button>
-            <button class="mt-tf-btn" data-tf="D1">D1</button>
-            <button class="mt-tf-btn" data-tf="W1">W1</button>
-            <button class="mt-tf-btn" data-tf="MN">MN</button>
-            <span class="mt-sep"></span>
-            <button class="mt-tool-icon" title="Candlestick"><i class="fas fa-chart-simple"></i></button>
-            <button class="mt-tool-icon" title="Line"><i class="fas fa-chart-line"></i></button>
-            <button class="mt-tool-icon" title="Indicators"><i class="fas fa-wave-square"></i></button>
+            <div class="mt-tf-group" id="tfGroup">
+                <button class="mt-tf-btn" data-tf="M1">M1</button>
+                <button class="mt-tf-btn" data-tf="M5">M5</button>
+                <button class="mt-tf-btn" data-tf="M15">M15</button>
+                <button class="mt-tf-btn" data-tf="M30">M30</button>
+                <button class="mt-tf-btn active" data-tf="H1">H1</button>
+                <button class="mt-tf-btn" data-tf="H4">H4</button>
+                <button class="mt-tf-btn" data-tf="D1">D1</button>
+                <button class="mt-tf-btn" data-tf="W1">W1</button>
+                <button class="mt-tf-btn" data-tf="MN">MN</button>
+            </div>
             <span class="mt-spacer"></span>
             <span class="mt-clock" id="mtClock">--:--:--</span>
             <span class="mt-date" id="mtDate">----</span>
         </div>
+    </header>
+
+    <!-- ========== MOBILE TOP BAR ========== -->
+    <header class="mt-mobile-top mobile-only">
+        <button class="mt-mobile-btn" id="mobileMenuBtn" aria-label="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="mt-mobile-title" id="mobileTitle">MetaTrader</div>
+        <button class="mt-mobile-btn" id="mobileRefreshBtn" aria-label="Refresh">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </header>
+
+    <!-- ========== MOBILE TIMEFRAME BAR ========== -->
+    <div class="mt-mobile-tf mobile-only" id="mobileTFBar">
+        <button class="mt-tf-btn" data-tf="M5">M5</button>
+        <button class="mt-tf-btn" data-tf="M15">M15</button>
+        <button class="mt-tf-btn" data-tf="M30">M30</button>
+        <button class="mt-tf-btn active" data-tf="H1">H1</button>
+        <button class="mt-tf-btn" data-tf="H4">H4</button>
+        <button class="mt-tf-btn" data-tf="D1">D1</button>
+        <button class="mt-tf-btn" data-tf="W1">W1</button>
     </div>
 
-    <div class="mt-body">
-        <!-- LEFT: Market Watch -->
-        <aside class="mt-left">
+    <!-- ========== MAIN LAYOUT ========== -->
+    <div class="mt-layout">
+        <!-- LEFT: Market Watch (desktop panel / mobile drawer) -->
+        <aside class="mt-market-panel" id="marketPanel">
             <div class="mt-panel-header">
                 <span><i class="fas fa-list"></i> Market Watch</span>
-                <input type="text" id="symbolSearch" placeholder="Search symbol" class="mt-search">
+                <button class="mt-close-drawer mobile-only" id="closeDrawer" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+                <input type="text" id="symbolSearch" placeholder="Search…" class="mt-search desktop-only">
+            </div>
+            <div class="mt-search-mobile mobile-only">
+                <input type="text" id="symbolSearchMobile" placeholder="Search symbol…" class="mt-search">
             </div>
             <div class="mt-market-watch">
                 <table class="mt-mw-table">
@@ -48,71 +77,63 @@
                             <th>Symbol</th>
                             <th class="num">Bid</th>
                             <th class="num">Ask</th>
-                            <th class="num">Signal</th>
-                            <th class="num">Conf</th>
+                            <th class="num">Chg</th>
                         </tr>
                     </thead>
                     <tbody id="mwBody">
-                        <tr><td colspan="5" class="mt-empty">Loading signals…</td></tr>
+                        <tr><td colspan="4" class="mt-empty">Loading signals…</td></tr>
                     </tbody>
                 </table>
             </div>
         </aside>
 
-        <!-- CENTER: Chart + Signals -->
-        <main class="mt-center">
+        <!-- OVERLAY (mobile drawer) -->
+        <div class="mt-overlay mobile-only" id="overlay"></div>
+
+        <!-- CENTER: Chart + Signal -->
+        <main class="mt-main">
             <div class="mt-chart-header">
-                <span class="mt-symbol-label" id="chartSymbol">AUDCAD</span>
+                <span class="mt-symbol-label" id="chartSymbol">—</span>
                 <span class="mt-tf-label" id="chartTF">H1</span>
-                <span class="mt-market-status" id="marketStatus">Market open</span>
+                <span class="mt-market-status" id="marketStatus">—</span>
             </div>
+
             <div class="mt-chart" id="chartContainer">
                 <canvas id="priceChart"></canvas>
                 <div class="mt-chart-loading" id="chartLoading">Loading chart…</div>
             </div>
-            <div class="mt-chart-toolbar">
-                <button class="mt-chart-btn" id="btn-chart-refresh"><i class="fas fa-rotate"></i> Update</button>
-                <span class="mt-chart-info" id="chartInfo"></span>
-            </div>
-        </main>
 
-        <!-- RIGHT: Signal details -->
-        <aside class="mt-right">
-            <div class="mt-panel-header">
-                <span><i class="fas fa-signal"></i> Signal Detail</span>
-            </div>
-            <div class="mt-signal-detail" id="signalDetail">
-                <div class="mt-empty">Select a symbol to view details</div>
-            </div>
-        </aside>
+            <!-- Signal Card (mobile: below chart; desktop: right side) -->
+            <section class="mt-signal-card" id="signalCard">
+                <div class="mt-empty">Select a symbol</div>
+            </section>
+        </main>
     </div>
 
-    <!-- BOTTOM: Positions / Orders / History -->
-    <div class="mt-bottom">
+    <!-- ========== BOTTOM PANEL (Positions / History / Config) ========== -->
+    <div class="mt-bottom-panel">
         <div class="mt-tabs">
             <button class="mt-tab active" data-tab="positions">Trade</button>
             <button class="mt-tab" data-tab="history">History</button>
             <button class="mt-tab" data-tab="config">Config</button>
-            <span class="mt-spacer"></span>
-            <span class="mt-account-summary" id="accountSummary">
-                Balance: 100 000.00 &nbsp; Equity: 100 000.00 &nbsp; Margin: 0.00 &nbsp; Free: 100 000.00
-            </span>
+            <span class="mt-account-summary desktop-only" id="accountSummary"></span>
         </div>
-        <div class="mt-tab-content" id="tab-positions">
-            <table class="mt-pos-table">
+
+        <div class="mt-tab-content active" id="tab-positions">
+            <table class="mt-pos-table desktop-only">
                 <thead>
                     <tr>
                         <th>Symbol</th>
                         <th>Ticket</th>
                         <th>Time</th>
                         <th>Type</th>
-                        <th class="num">Volume</th>
-                        <th class="num">Price</th>
-                        <th class="num">S / L</th>
-                        <th class="num">T / P</th>
+                        <th class="num">Vol</th>
+                        <th class="num">Entry</th>
+                        <th class="num">S/L</th>
+                        <th class="num">T/P</th>
                         <th class="num">Current</th>
-                        <th class="num">Profit %</th>
-                        <th class="num">Profit USD</th>
+                        <th class="num">PnL %</th>
+                        <th class="num">PnL $</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -120,15 +141,19 @@
                     <tr><td colspan="12" class="mt-empty">You don't have any positions</td></tr>
                 </tbody>
             </table>
+            <div class="mt-pos-cards mobile-only" id="posCards">
+                <div class="mt-empty">You don't have any positions</div>
+            </div>
         </div>
-        <div class="mt-tab-content hidden" id="tab-history">
-            <table class="mt-pos-table">
+
+        <div class="mt-tab-content" id="tab-history">
+            <table class="mt-pos-table desktop-only">
                 <thead>
                     <tr>
                         <th>Symbol</th>
                         <th>Time</th>
                         <th>Type</th>
-                        <th class="num">Volume</th>
+                        <th class="num">Vol</th>
                         <th class="num">Entry</th>
                         <th class="num">Exit</th>
                         <th class="num">PnL</th>
@@ -139,8 +164,12 @@
                     <tr><td colspan="8" class="mt-empty">No history yet</td></tr>
                 </tbody>
             </table>
+            <div class="mt-pos-cards mobile-only" id="histCards">
+                <div class="mt-empty">No history yet</div>
+            </div>
         </div>
-        <div class="mt-tab-content hidden" id="tab-config">
+
+        <div class="mt-tab-content" id="tab-config">
             <div class="mt-config-grid">
                 <label>Confidence Threshold
                     <input type="number" id="cfgConf" min="0.5" max="1" step="0.05" value="0.75">
@@ -159,6 +188,22 @@
                 <button class="mt-primary" id="cfgApply">Apply</button>
                 <span id="cfgStatus" class="mt-status-text"></span>
             </div>
+        </div>
+    </div>
+
+    <!-- ========== MOBILE ACCOUNT BAR (bottom) ========== -->
+    <div class="mt-mobile-account mobile-only" id="mobileAccount">
+        <div class="mt-acc-item">
+            <span class="mt-acc-label">Equity</span>
+            <span class="mt-acc-value" id="mEq">100000.00</span>
+        </div>
+        <div class="mt-acc-item">
+            <span class="mt-acc-label">PnL</span>
+            <span class="mt-acc-value" id="mPnl">0.00</span>
+        </div>
+        <div class="mt-acc-item">
+            <span class="mt-acc-label">Positions</span>
+            <span class="mt-acc-value" id="mPos">0</span>
         </div>
     </div>
 

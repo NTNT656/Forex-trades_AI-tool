@@ -2,41 +2,65 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MetaTrader WebTerminal – Positions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1e1e1e">
+    <title>MetaTrader – Positions</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <div class="mt-toolbar">
+<body class="mt-app">
+    <header class="mt-mobile-top mobile-only">
+        <a href="/" class="mt-mobile-btn" aria-label="Back"><i class="fas fa-arrow-left"></i></a>
+        <div class="mt-mobile-title">Positions</div>
+        <button class="mt-mobile-btn" id="dashRefresh" aria-label="Refresh"><i class="fas fa-sync-alt"></i></button>
+    </header>
+
+    <header class="mt-toolbar desktop-only">
         <div class="mt-menu">
             <a href="/" class="mt-menu-btn"><i class="fas fa-arrow-left"></i> Terminal</a>
             <span class="mt-sep"></span>
             <span class="mt-clock" id="mtClock">--:--:--</span>
             <span class="mt-date" id="mtDate">----</span>
         </div>
-    </div>
+    </header>
 
-    <div class="mt-body-full">
-        <div class="mt-account-bar">
+    <div class="mt-dashboard">
+        <div class="mt-account-bar desktop-only">
             <span>Balance: <b id="accBalance">—</b></span>
             <span>Equity: <b id="accEquity">—</b></span>
             <span>Open Positions: <b id="accPositions">0</b></span>
             <span>Total PnL: <b id="accPnl">0.00</b> USD</span>
         </div>
-        <table class="mt-pos-table">
+
+        <div class="mt-mobile-summary mobile-only">
+            <div class="mt-mob-card">
+                <span>Equity</span>
+                <b id="mEqDash">100000.00</b>
+            </div>
+            <div class="mt-mob-card">
+                <span>PnL</span>
+                <b id="mPnlDash">0.00</b>
+            </div>
+            <div class="mt-mob-card">
+                <span>Positions</span>
+                <b id="mPosDash">0</b>
+            </div>
+        </div>
+
+        <table class="mt-pos-table desktop-only">
             <thead>
                 <tr>
                     <th>Symbol</th>
                     <th>Ticket</th>
                     <th>Time</th>
                     <th>Type</th>
-                    <th class="num">Volume</th>
+                    <th class="num">Vol</th>
                     <th class="num">Entry</th>
-                    <th class="num">S / L</th>
-                    <th class="num">T / P</th>
+                    <th class="num">S/L</th>
+                    <th class="num">T/P</th>
                     <th class="num">Current</th>
-                    <th class="num">Profit %</th>
-                    <th class="num">Profit USD</th>
+                    <th class="num">PnL %</th>
+                    <th class="num">PnL $</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -44,6 +68,10 @@
                 <tr><td colspan="12" class="mt-empty">You don't have any positions</td></tr>
             </tbody>
         </table>
+
+        <div class="mt-pos-cards mobile-only" id="posCards">
+            <div class="mt-empty">You don't have any positions</div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
