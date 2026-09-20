@@ -3,46 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pattern Trader Console</title>
+    <title>MetaTrader WebTerminal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
-        <nav class="navbar">
-            <div class="logo">
-                <i class="fas fa-chart-line"></i>
-                <span>Pattern<span class="accent">Trader</span></span>
-            </div>
-            <div class="nav-links">
-                <span class="badge-live"><i class="fas fa-circle"></i> LIVE</span>
-                <span class="time-display" id="serverTime"></span>
-            </div>
-        </nav>
-
-        <div class="controls">
-            <div class="control-group">
-                <label><i class="fas fa-robot"></i> Auto‑Trade</label>
-                <div class="toggle-container">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="autoTradeToggle">
-                        <span class="slider"></span>
-                    </label>
-                    <span id="autoTradeStatus">Disabled</span>
-                </div>
-            </div>
-            <div class="control-group">
-                <button id="retrainBtn" class="btn-secondary"><i class="fas fa-brain"></i> Retrain Model</button>
-                <span id="retrainStatus" style="font-size:0.75rem;color:var(--text-secondary);margin-left:0.5rem;"></span>
-            </div>
-            <button id="refreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Generate Signals</button>
+    <!-- Top menu bar -->
+    <div class="mt-toolbar">
+        <div class="mt-menu">
+            <button class="mt-menu-btn" id="btn-refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <button class="mt-menu-btn" id="btn-retrain"><i class="fas fa-brain"></i> Retrain</button>
+            <button class="mt-menu-btn" id="btn-settings"><i class="fas fa-cog"></i> Settings</button>
+            <span class="mt-sep"></span>
+            <button class="mt-tf-btn" data-tf="M1">M1</button>
+            <button class="mt-tf-btn" data-tf="M5">M5</button>
+            <button class="mt-tf-btn" data-tf="M15">M15</button>
+            <button class="mt-tf-btn" data-tf="M30">M30</button>
+            <button class="mt-tf-btn active" data-tf="H1">H1</button>
+            <button class="mt-tf-btn" data-tf="H4">H4</button>
+            <button class="mt-tf-btn" data-tf="D1">D1</button>
+            <button class="mt-tf-btn" data-tf="W1">W1</button>
+            <button class="mt-tf-btn" data-tf="MN">MN</button>
+            <span class="mt-sep"></span>
+            <button class="mt-tool-icon" title="Candlestick"><i class="fas fa-chart-simple"></i></button>
+            <button class="mt-tool-icon" title="Line"><i class="fas fa-chart-line"></i></button>
+            <button class="mt-tool-icon" title="Indicators"><i class="fas fa-wave-square"></i></button>
+            <span class="mt-spacer"></span>
+            <span class="mt-clock" id="mtClock">--:--:--</span>
+            <span class="mt-date" id="mtDate">----</span>
         </div>
+    </div>
 
-        <div id="loading" class="loading-card hidden">
-            <i class="fas fa-spinner fa-pulse"></i> Loading signals...
+    <div class="mt-body">
+        <!-- LEFT: Market Watch -->
+        <aside class="mt-left">
+            <div class="mt-panel-header">
+                <span><i class="fas fa-list"></i> Market Watch</span>
+                <input type="text" id="symbolSearch" placeholder="Search symbol" class="mt-search">
+            </div>
+            <div class="mt-market-watch">
+                <table class="mt-mw-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th class="num">Bid</th>
+                            <th class="num">Ask</th>
+                            <th class="num">Signal</th>
+                            <th class="num">Conf</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mwBody">
+                        <tr><td colspan="5" class="mt-empty">Loading signals…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </aside>
+
+        <!-- CENTER: Chart + Signals -->
+        <main class="mt-center">
+            <div class="mt-chart-header">
+                <span class="mt-symbol-label" id="chartSymbol">AUDCAD</span>
+                <span class="mt-tf-label" id="chartTF">H1</span>
+                <span class="mt-market-status" id="marketStatus">Market open</span>
+            </div>
+            <div class="mt-chart" id="chartContainer">
+                <canvas id="priceChart"></canvas>
+                <div class="mt-chart-loading" id="chartLoading">Loading chart…</div>
+            </div>
+            <div class="mt-chart-toolbar">
+                <button class="mt-chart-btn" id="btn-chart-refresh"><i class="fas fa-rotate"></i> Update</button>
+                <span class="mt-chart-info" id="chartInfo"></span>
+            </div>
+        </main>
+
+        <!-- RIGHT: Signal details -->
+        <aside class="mt-right">
+            <div class="mt-panel-header">
+                <span><i class="fas fa-signal"></i> Signal Detail</span>
+            </div>
+            <div class="mt-signal-detail" id="signalDetail">
+                <div class="mt-empty">Select a symbol to view details</div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- BOTTOM: Positions / Orders / History -->
+    <div class="mt-bottom">
+        <div class="mt-tabs">
+            <button class="mt-tab active" data-tab="positions">Trade</button>
+            <button class="mt-tab" data-tab="history">History</button>
+            <button class="mt-tab" data-tab="config">Config</button>
+            <span class="mt-spacer"></span>
+            <span class="mt-account-summary" id="accountSummary">
+                Balance: 100 000.00 &nbsp; Equity: 100 000.00 &nbsp; Margin: 0.00 &nbsp; Free: 100 000.00
+            </span>
         </div>
-        <div id="errorMsg" class="error-card hidden"></div>
-        <div id="summary" class="summary-section"></div>
+        <div class="mt-tab-content" id="tab-positions">
+            <table class="mt-pos-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Ticket</th>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th class="num">Volume</th>
+                        <th class="num">Price</th>
+                        <th class="num">S / L</th>
+                        <th class="num">T / P</th>
+                        <th class="num">Current</th>
+                        <th class="num">Profit %</th>
+                        <th class="num">Profit USD</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="posBody">
+                    <tr><td colspan="12" class="mt-empty">You don't have any positions</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-tab-content hidden" id="tab-history">
+            <table class="mt-pos-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th class="num">Volume</th>
+                        <th class="num">Entry</th>
+                        <th class="num">Exit</th>
+                        <th class="num">PnL</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody id="histBody">
+                    <tr><td colspan="8" class="mt-empty">No history yet</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-tab-content hidden" id="tab-config">
+            <div class="mt-config-grid">
+                <label>Confidence Threshold
+                    <input type="number" id="cfgConf" min="0.5" max="1" step="0.05" value="0.75">
+                </label>
+                <label>Trade Volume (lots)
+                    <input type="number" id="cfgVol" min="0.01" max="1" step="0.01" value="0.10">
+                </label>
+                <label>Profit Close %
+                    <select id="cfgProfitClose">
+                        <option value="0.30">30%</option>
+                        <option value="0.50">50%</option>
+                        <option value="0.70">70%</option>
+                        <option value="0">Off</option>
+                    </select>
+                </label>
+                <button class="mt-primary" id="cfgApply">Apply</button>
+                <span id="cfgStatus" class="mt-status-text"></span>
+            </div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>

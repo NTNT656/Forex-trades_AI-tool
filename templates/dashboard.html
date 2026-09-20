@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MetaTrader WebTerminal – Positions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="mt-toolbar">
+        <div class="mt-menu">
+            <a href="/" class="mt-menu-btn"><i class="fas fa-arrow-left"></i> Terminal</a>
+            <span class="mt-sep"></span>
+            <span class="mt-clock" id="mtClock">--:--:--</span>
+            <span class="mt-date" id="mtDate">----</span>
+        </div>
+    </div>
+
+    <div class="mt-body-full">
+        <div class="mt-account-bar">
+            <span>Balance: <b id="accBalance">—</b></span>
+            <span>Equity: <b id="accEquity">—</b></span>
+            <span>Open Positions: <b id="accPositions">0</b></span>
+            <span>Total PnL: <b id="accPnl">0.00</b> USD</span>
+        </div>
+        <table class="mt-pos-table">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Ticket</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th class="num">Volume</th>
+                    <th class="num">Entry</th>
+                    <th class="num">S / L</th>
+                    <th class="num">T / P</th>
+                    <th class="num">Current</th>
+                    <th class="num">Profit %</th>
+                    <th class="num">Profit USD</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="posBody">
+                <tr><td colspan="12" class="mt-empty">You don't have any positions</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

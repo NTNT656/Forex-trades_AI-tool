@@ -1,15 +1,13 @@
-flask
-requests
-yfinance
-pandas
-numpy
-pandas-ta
-python-dotenv
-scikit-learn
-xgboost
-hmmlearn
-scipy
-gunicorn
-imbalanced-learn
-pandas-datareader
-joblib
+flask>=2.0.0
+requests>=2.28.0
+yfinance>=0.2.0
+pandas>=1.5.0
+numpy>=1.24.0
+pandas-ta>=0.3.14b0
+python-dotenv>=1.0.0
+lightgbm>=4.0.0
+joblib>=1.2.0
+gunicorn>=20.1.0
+# Optional: uncomment if you want ONNX inference
+# onnxruntime>=1.16.0
+# skl2onnx>=1.15.0

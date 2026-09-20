@@ -1,75 +1,45 @@
-Pattern Trader – CNN-LSTM Forex Signal System
-A production‑ready forex trading signal system powered by a hybrid CNN‑LSTM deep learning model.
-The system detects chart patterns, generates trade signals (BUY/SELL/HOLD) with confidence scores, and supports automated execution via MetaTrader 4/5.
+# Pattern Trader – Lightweight Forex Signal System
 
-Overview
-This system is designed to be a complete pipeline for algorithmic forex trading. It:
+A lightweight forex trading signal system built on **LightGBM** + classic technical strategies.
+Runs on a small VPS (~256 MB RAM), starts in <2 seconds, with zero heavy ML dependencies.
 
-Ingests real‑time OHLCV data from yfinance or Twelve Data.
+## What Changed vs. Original
 
-Engineers a rich set of technical, macro‑economic, and commodity features.
+**Removed** (heavy, slow):
+- ❌ SVM + HMM (`pattern_model.py`, `hmmlearn`, `scikit-learn`)
+- ❌ ARIMA volatility (`arima_model.py`, `statsmodels`)
+- ❌ SR Trend model (`sr_trend_model.py`, `DBSCAN`)
+- ❌ scipy-dependent chart patterns (`chart_patterns.py`)
+- ❌ pandas_ta-based candlestick patterns (`candlestick_patterns.py`)
 
-Uses a CNN‑LSTM neural network to capture both geometric chart patterns (head & shoulders, triangles, flags) and temporal dependencies (price momentum, reversal sequences).
+**Kept/Added** (light, fast):
+- ✅ **LightGBM** per pair (~200 KB each)
+- ✅ **Pure numpy** pattern detection (`patterns_light.py`)
+- ✅ **EWMA volatility** instead of ARIMA
+- ✅ Rule-based strategies: Bollinger, Williams %R, CCI, Stochastic, MACD, RSI, Pairs, Ensemble
 
-Applies confidence calibration (Platt scaling) to produce probabilities in the range of 0.7–0.9.
+## Dependency Size
 
-Outputs actionable signals with stop‑loss and take‑profit levels based on volatility.
+| Before | After |
+|--------|-------|
+| ~800 MB (sklearn + statsmodels + scipy + lightgbm + xgboost) | **~150 MB** (flask + lightgbm + pandas + numpy) |
 
-Logs all trades to Supabase for performance monitoring and adaptive retraining.
+## Files
 
-Provides a web dashboard for monitoring signals, confidence, and trade history.
+| File | Purpose |
+|------|---------|
+| `app.py` | Flask app, signal generation, auto-trade |
+| `lightgbm_model.py` | LightGBM training + Supabase persistence + optional ONNX |
+| `patterns_light.py` | Pure numpy pattern detection |
+| `backtest.py` | Walk-forward backtest |
+| `forward_test.py` | Live/recent forward test |
+| `pytrader_api.py` | MT4/MT5 socket bridge (unchanged) |
+| `dashboard.html`, `index.html`, `script.js`, `style.css` | Web UI |
 
-Note: This version uses only the CNN‑LSTM model. All fallback systems (SVM, HMM, rule‑based candlestick/chart pattern recognisers) have been removed. The system relies entirely on deep learning for signal generation.
+## Setup
 
-Features
-✅ CNN‑LSTM hybrid model – detects both spatial and temporal patterns in forex data.
-
-✅ Real‑time data ingestion – OHLCV from yfinance or Twelve Data.
-
-✅ Feature engineering – 30+ technical indicators + macro (bond spreads, VIX) + commodities.
-
-✅ Confidence calibration – Platt scaling for reliable probability estimates.
-
-✅ Automated trade execution – integrated with MT4/MT5 via PyTrader.
-
-✅ Trade logging & performance tracking – Supabase database.
-
-✅ Periodic retraining – model updates every 6 hours with fresh data.
-
-✅ Web dashboard – built with Flask, JavaScript, and CSS.
-
-✅ Backtesting framework – walk‑forward validation to compare strategies.
-
-Architecture
-text
-┌─────────────────────┐
-│   Data Ingestion    │
-│ (yfinance / Twelve) │
-└─────────┬───────────┘
-          ▼
-┌─────────────────────┐
-│  Feature Engineering │
-│  (pandas_ta + macro) │
-└─────────┬───────────┘
-          ▼
-┌─────────────────────┐
-│   CNN‑LSTM Model    │
-│  (TensorFlow/Keras) │
-└─────────┬───────────┘
-          ▼
-┌─────────────────────┐
-│  Confidence         │
-│  Calibration        │
-└─────────┬───────────┘
-          ▼
-┌─────────────────────┐
-│  Signal Decision    │
-│  (BUY/SELL/HOLD)    │
-└─────────┬───────────┘
-          ▼
-┌─────────────────────┐
-│  Execution Layer    │
-│  (MT4/MT5 via       │
-│   PyTrader)         │
-└─────────────────────┘
-The system is modular – each component can be modified or replaced independently.
+```bash
+pip install -r requirements.txt
+export SUPABASE_URL="https://xxx.supabase.co"
+export SUPABASE_SERVICE_KEY="..."
+python app.py
